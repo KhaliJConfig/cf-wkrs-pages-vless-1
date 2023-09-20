@@ -28,7 +28,7 @@ export default {
             proxyIP = env.PROXYIP || proxyIP;
             dohURL = env.DNS_RESOLVER_URL || dohURL;
             const upgradeHeader = request.headers.get('Upgrade');
-            const cfIPCountry = request.headers.get('CF-IPCountry') || '';
+            const cfIPCountry = request.headers.get('IPCountry') || '';
             if (!upgradeHeader || upgradeHeader !== 'websocket') {
                 const url = new URL(request.url);
                 switch (url.pathname) {
