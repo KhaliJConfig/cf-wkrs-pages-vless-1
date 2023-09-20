@@ -41,8 +41,6 @@ export default {
                         });
                     case '/connect': // for test connect to cf socket
                         const [hostname, port] = ['cloudflare.com', '80'];
-                        console.log(`Connecting to ${hostname}:${port}...`);
-
                         try {
                             const socket = await connect({
                                 hostname: hostname,
@@ -56,7 +54,7 @@ export default {
                             } catch (writeError) {
                                 writer.releaseLock();
                                 await socket.close();
-                                return new Response(writeError.message, { status: 500 });
+                                return new Response(writeError.message, { status: 501 });
                             }
 
                             writer.releaseLock();
@@ -70,7 +68,7 @@ export default {
                             } catch (readError) {
                                 await reader.releaseLock();
                                 await socket.close();
-                                return new Response(readError.message, { status: 500 });
+                                return new Response(readError.message, { status: 502 });
                             }
 
                             await reader.releaseLock();
