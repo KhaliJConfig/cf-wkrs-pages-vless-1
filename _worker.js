@@ -40,41 +40,14 @@ export default {
                             },
                         });
                     case '/connect': // for test connect to cf socket
-                        const [hostname, port] = ['cloudflare.com', '80'];
+                        const traceServer = { hostname: "cloudflare.com", port: 80 };
                         try {
-                            const socket = await connect({
-                                hostname: hostname,
-                                port: parseInt(port, 10),
-                            });
-
-                            const writer = socket.writable.getWriter();
-
-                            try {
-                                await writer.write(new TextEncoder().encode('GET /cdn-cgi/trace HTTP/1.1\r\nHost: ' + hostname + '\r\n\r\n'));
-                            } catch (writeError) {
-                                writer.releaseLock();
-                                await socket.close();
-                                return new Response(writeError.message, { status: 501 });
-                            }
-
-                            writer.releaseLock();
-
-                            const reader = socket.readable.getReader();
-                            let value;
-
-                            try {
-                                const result = await reader.read();
-                                value = result.value;
-                            } catch (readError) {
-                                await reader.releaseLock();
-                                await socket.close();
-                                return new Response(readError.message, { status: 502 });
-                            }
-
-                            await reader.releaseLock();
-                            await socket.close();
-
-                            return new Response(new TextDecoder().decode(value), { status: 200 });
+                            const socket = connect(traceServer);
+                            const writer = socket.writable.getWriter()
+                            const encoder = new TextEncoder();
+                            const encoded = encoder.encode('GET /cdn-cgi/trace HTTP/1.1\r\nHost: ' + traceServer.hostname + '\r\n\r\n');
+                            await writer.write(encoded);
+                            return new Response(socket.readable, { headers: { "Content-Type": "text/plain" } });
                         } catch (connectError) {
                             return new Response(connectError.message, { status: 500 });
                         }
