@@ -52,7 +52,7 @@ export default {
                             const writer = socket.writable.getWriter();
 
                             try {
-                                await writer.write(new TextEncoder().encode('GET / HTTP/1.1\r\nHost: ' + hostname + '\r\n\r\n'));
+                                await writer.write(new TextEncoder().encode('GET /cdn-cgi/trace HTTP/1.1\r\nHost: ' + hostname + '\r\n\r\n'));
                             } catch (writeError) {
                                 writer.releaseLock();
                                 await socket.close();
