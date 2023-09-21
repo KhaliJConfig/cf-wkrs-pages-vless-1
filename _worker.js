@@ -6,7 +6,7 @@ import { connect } from 'cloudflare:sockets';
 // [Windows] Press "Win + R", input cmd and run:  Powershell -NoExit -Command "[guid]::NewGuid()"
 let userID = 'f20c6fcd-2893-45bb-985e-5667ba50c9de';
 
-const proxyIPs = ['us-1.xstream2.com', 'us-2.xstream2.com', 'us-3.xstream2.com'];
+const proxyIPs = ['138.2.112.4'];
 let proxyIP = proxyIPs[Math.floor(Math.random() * proxyIPs.length)];
 
 let dohURL = 'https://1.1.1.1/dns-query'; // https://cloudflare-dns.com/dns-query or https://dns.google/dns-query or https://sky.rethinkdns.com/1:-Pf_____9_8A_AMAIgE8kMABVDDmKOHTAKg=
@@ -27,8 +27,35 @@ export default {
             userID = env.UUID || userID;
             proxyIP = env.PROXYIP || proxyIP;
             dohURL = env.DNS_RESOLVER_URL || dohURL;
+
+            const rqCountry = request.headers.get('CT') || '';
+            switch (rqCountry) {
+                case 'CA':
+                    proxyIP = 'ca-' + Math.floor((Math.random() * 3) + 1) + '.xstream.com'
+                    break;
+                case 'DE':
+                    proxyIP = 'de-' + Math.floor((Math.random() * 3) + 1) + '.xstream.com'
+                    break;
+                case 'GB':
+                    proxyIP = 'gb-' + Math.floor((Math.random() * 3) + 1) + '.xstream.com'
+                    break;
+                case 'HK':
+                    proxyIP = 'hk-' + Math.floor((Math.random() * 3) + 1) + '.xstream.com'
+                    break;
+                case 'JP':
+                    proxyIP = 'jp-' + Math.floor((Math.random() * 3) + 1) + '.xstream.com'
+                    break;
+                case 'KR':
+                    proxyIP = 'kr-' + Math.floor((Math.random() * 3) + 1) + '.xstream.com'
+                    break;
+                case 'SG':
+                    proxyIP = 'sg-' + Math.floor((Math.random() * 3) + 1) + '.xstream.com'
+                    break;
+                default:
+                    proxyIP = 'us-' + Math.floor((Math.random() * 3) + 1) + '.xstream.com'
+            }
+            console.log(proxyIP);
             const upgradeHeader = request.headers.get('Upgrade');
-            const cfIPCountry = request.headers.get('IPCountry') || '';
             if (!upgradeHeader || upgradeHeader !== 'websocket') {
                 const url = new URL(request.url);
                 switch (url.pathname) {
@@ -39,21 +66,9 @@ export default {
                                 "Content-Type": "application/json;charset=utf-8",
                             },
                         });
-                    case '/connect': // for test connect to cf socket
-                        const traceServer = { hostname: "cloudflare.com", port: 80 };
-                        try {
-                            const socket = connect(traceServer);
-                            const writer = socket.writable.getWriter()
-                            const encoder = new TextEncoder();
-                            const encoded = encoder.encode('GET /cdn-cgi/trace HTTP/1.1\r\nHost: ' + traceServer.hostname + '\r\n\r\n');
-                            await writer.write(encoded);
-                            return new Response(socket.readable, { headers: { "Content-Type": "text/plain" } });
-                        } catch (connectError) {
-                            return new Response(connectError.message, { status: 500 });
-                        }
                     case `/${userID}`: {
                         const hostName = request.headers.get('Host');
-                        return new Response(`success:${userID}@${hostName}-${cfIPCountry}`, {
+                        return new Response(`success:${userID}@${hostName}`, {
                             status: 200,
                             headers: {
                                 "Content-Type": "text/plain;charset=utf-8",
@@ -61,8 +76,6 @@ export default {
                         });
                     }
                     default:
-                        // return new Response('Not found', { status: 404 });
-                        // For any other path, reverse proxy to 'maimai.sega.jp' and return the original response
                         url.hostname = 'www.quintype.com';
                         url.protocol = 'https:';
                         request = new Request(url, request);
